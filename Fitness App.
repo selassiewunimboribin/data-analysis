@@ -1,0 +1,47 @@
+USE FitnessTrackingAPP
+
+--SELECT *
+--FROM UsersInformation
+--JOIN workoutaction
+--	ON UsersInformation.IDnumber = workoutaction.IDnumber
+
+--SELECT IDnumber, ExerciseInfo.Exercisetype, DateOfExercise, TimeSpentMin, RatedAccomplishment
+--FROM ExerciseInfo
+--JOIN PerformanceMetrix
+--	ON ExerciseInfo.Exercisetype = PerformanceMetrix.Exercisetype
+--ORDER BY DateOfExercise DESC
+
+SELECT ExerciseInfo.Exercisetype, Age, DateOfExercise, TimeSpentMin, RatedAccomplishment, UserName, UsersInformation.IDnumber,
+CASE 
+	WHEN DateOfExercise >= '2024-05-01' THEN 'achievingGoal'
+	WHEN DateOfExercise >= '2024-03-22' AND DateOfExercise <= '2024-04-23' THEN 'PshingHard'
+	ELSE
+		'mayquite'
+END AS Prediction
+FROM ExerciseInfo
+JOIN PerformanceMetrix
+	ON ExerciseInfo.Exercisetype = PerformanceMetrix.Exercisetype
+JOIN UsersInformation
+	ON ExerciseInfo.IDnumber = UsersInformation.IDnumber
+--ORDER BY DateOfExercise DESC
+ORDER BY Age	
+
+--SELECT TimeSpentMin, RatedAccomplishment,
+--CASE 
+--	WHEN TimeSpentMin < '28' THEN 'okay'
+--	WHEN TimeSpentMin > '25' AND TimeSpentMin < '35' THEN 'welldone'
+--	WHEN TimeSpentMin > '35' AND TimeSpentMin < '65' THEN 'excellent'
+--ELSE 
+--	'okay'
+--END AS Remarks
+--FROM PerformanceMetrix
+
+--UPDATE PerformanceMetrix
+--SET RatedAccomplishment = CASE 
+--	WHEN TimeSpentMin < '28' THEN 'okay'
+--	WHEN TimeSpentMin > '25' AND TimeSpentMin < '35' THEN 'welldone'
+--	WHEN TimeSpentMin > '35' AND TimeSpentMin < '65' THEN 'excellent'
+--ELSE 
+--	'okay'
+--END 
+--FROM PerformanceMetrix
