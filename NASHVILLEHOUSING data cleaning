@@ -1,0 +1,137 @@
+USE PotfolioProject
+SELECT * 
+FROM NASHVILLEHOUSING
+
+SELECT CorrespondingDate, CONVERT(Date, SaleDate) AS TheDate
+FROM NASHVILLEHOUSING
+
+
+ALTER TABLE NASHVILLEHOUSING
+ADD CorrespondingDate Date
+
+UPDATE NASHVILLEHOUSING
+SET CorrespondingDate = CONVERT(Date, SaleDate)
+
+--pupolate property address data
+SELECT *
+FROM NASHVILLEHOUSING
+WHERE PropertyAddress IS NULL
+
+SELECT *
+FROM NASHVILLEHOUSING
+ORDER BY ParcelID
+
+--populate property address data
+SELECT a.ParcelID, a.PropertyAddress, b.ParcelID, b.PropertyAddress, ISNULL(a.PropertyAddress, b.PropertyAddress)
+FROM NASHVILLEHOUSING a
+JOIN NASHVILLEHOUSING b
+	ON a.ParcelID = b.ParcelID
+	AND a.[UniqueID ] != b.[UniqueID ]
+WHERE a.PropertyAddress IS NULL
+
+UPDATE a
+SET PropertyAddress = ISNULL(a.PropertyAddress, b.PropertyAddress)
+FROM NASHVILLEHOUSING a
+JOIN NASHVILLEHOUSING b
+	ON a.ParcelID = b.ParcelID
+	AND a.[UniqueID ] != b.[UniqueID ]
+WHERE a.PropertyAddress IS NULL
+
+--breaking out address into individual columns(address, city state)
+SELECT PropertyAddress
+FROM NASHVILLEHOUSING
+
+SELECT
+SUBSTRING(PropertyAddress, 1, CHARINDEX(',', PropertyAddress)-1) AS Address,
+SUBSTRING(PropertyAddress, CHARINDEX(',', PropertyAddress) +1, LEN(PropertyAddress))
+FROM NASHVILLEHOUSING
+
+ALTER TABLE NASHVILLEHOUSING
+ADD PropertySplitAddress VARCHAR(255)
+
+UPDATE NASHVILLEHOUSING
+SET PropertySplitAddress = SUBSTRING(PropertyAddress, 1, CHARINDEX(',', PropertyAddress)-1)
+
+ALTER TABLE NASHVILLEHOUSING
+ADD PropertySplitCity VARCHAR(255)
+
+UPDATE NASHVILLEHOUSING
+SET PropertySplitCity = SUBSTRING(PropertyAddress, CHARINDEX(',', PropertyAddress) +1, LEN(PropertyAddress))
+
+SELECT *
+FROM NASHVILLEHOUSING
+
+
+SELECT OwnerAddress
+FROM NASHVILLEHOUSING
+--parsename splits from the last to the first 
+SELECT 
+PARSENAME(REPLACE(OwnerAddress, ',', '.'), 3),
+PARSENAME(REPLACE(OwnerAddress, ',', '.'), 2),
+PARSENAME(REPLACE(OwnerAddress, ',', '.'), 1)
+FROM NASHVILLEHOUSING
+
+ALTER TABLE NASHVILLEHOUSING
+ADD OwnerSplitAddress VARCHAR(255)
+
+UPDATE NASHVILLEHOUSING
+SET OwnerSplitAddress = PARSENAME(REPLACE(OwnerAddress, ',', '.'), 3)
+
+ALTER TABLE NASHVILLEHOUSING
+ADD OwnerSplitCity VARCHAR(255)
+
+UPDATE NASHVILLEHOUSING
+SET OwnerSplitCity = PARSENAME(REPLACE(OwnerAddress, ',', '.'), 2)
+
+ALTER TABLE NASHVILLEHOUSING
+ADD OwnerSplitState VARCHAR(255)
+
+UPDATE NASHVILLEHOUSING
+SET OwnerSplitState = PARSENAME(REPLACE(OwnerAddress, ',', '.'), 1)
+
+SELECT *
+FROM NASHVILLEHOUSING
+
+--change Y and N to yes and no in 'sold as vacant' field
+SELECT SoldAsVacant,
+CASE
+	WHEN SoldAsVacant = 'Y' THEN 'Yes'
+	WHEN SoldAsVacant = 'N' THEN 'No'
+	ELSE SoldAsVacant
+	END
+FROM NASHVILLEHOUSING
+
+UPDATE NASHVILLEHOUSING
+SET SoldAsVacant = CASE
+	WHEN SoldAsVacant = 'Y' THEN 'Yes'
+	WHEN SoldAsVacant = 'N' THEN 'No'
+	ELSE SoldAsVacant
+	END
+FROM NASHVILLEHOUSING
+
+SELECT DISTINCT(SoldAsVacant), COUNT(SoldAsVacant)
+FROM NASHVILLEHOUSING
+GROUP BY SoldAsVacant
+ORDER BY 2
+
+--remove duplicates
+WITH RowNumCTE AS(
+SELECT *, ROW_NUMBER() OVER(PARTITION BY ParcelID,PropertyAddress,SalePrice, SaleDate, LegalReference 
+	ORDER BY UniqueID) AS RowNum
+FROM NASHVILLEHOUSING
+--ORDER BY ParcelID 
+)
+
+SELECT *
+FROM RowNumCTE
+WHERE RowNum > 1 
+ORDER BY PropertyAddress
+
+
+--delete unused columns
+
+SELECT *
+FROM NASHVILLEHOUSING
+
+ALTER TABLE NASHVILLEHOUSING
+DROP COLUMN PropertyAddress, OwnerAddress, TaxDistrict
